@@ -5,7 +5,7 @@
             <p class="ml-2 cics"> College of Information and Computing Sciences </p>
         </div> -->
     </div>
-    <div class="navbar-logout" (click)="logout()" style="cursor: pointer;">
+    <div class="navbar-logout" (click)="confirmLogout()" style="cursor: pointer;">
         Logout
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
@@ -48,3 +48,14 @@
 
     
 </section>
+ <div  id="comp-render" *ngIf="display">
+   <div (click)="closeModal()" class="fixed w-[100vw] h-[100vh] top-0 left-0 z-[1000] bg-[#81818199] flex justify-center items-center">
+    <div (click)="$event.stopPropagation()"class="rounded-md bg-white flex flex-col p-6 shadow-md">
+        <div class="mb-4">Are you sure you want to logout?</div>
+        <div class="flex flex-row gap-2">
+            <button class="p-2 rounded-md text-white bg-red-500 ml-auto hover:opacity-75"  (click)="closeModal()">Cancel</button>
+            <button class="p-2 rounded-md text-white bg-blue-500  hover:opacity-75"  (click)="logout()">Logout</button>
+        </div>
+    </div>
+</div>
+ </div>

@@ -31,6 +31,7 @@ import { VerifyTaskComponent } from './user-management-components/verify-task/ve
 
 import { UserManualComponent } from './user-manual/user-manual.component';
 import { ArchiveComponent } from './archive/archive.component';
+import { ArchivedAccountsComponent } from './user-management-components/archived-accounts/archived-accounts.component';
 @NgModule({
   declarations: [
     AppComponent,
@@ -48,7 +49,8 @@ import { ArchiveComponent } from './archive/archive.component';
     DownloadReportComponent,
     VerifyTaskComponent,
     UserManualComponent,
-    ArchiveComponent
+    ArchiveComponent,
+    ArchivedAccountsComponent
   ],
   imports: [
     BrowserModule,
