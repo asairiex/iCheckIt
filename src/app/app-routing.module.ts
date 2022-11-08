@@ -19,6 +19,7 @@ import { pipe } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserManualComponent } from './user-manual/user-manual.component';
 import { ArchivedAccountsComponent } from './user-management-components/archived-accounts/archived-accounts.component';
+import { CalendarComponent } from './calendar/calendar.component';
 
 const redirectUnauthorizedToLogin = () => redirectUnauthorizedTo(['login']);
 
@@ -78,6 +79,7 @@ const routes: Routes = [
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' }, // redirect to `Home`
   { path: 'archive', component: ArchiveComponent },
+  { path: 'calendar', component: CalendarComponent },
   { path: '**', component: PagenotfoundComponent },
 ];
 

@@ -626,25 +626,32 @@
             <div class="modal-form">
               <ol class="pl-5 list-decimal">
                 <li class="my-2">
-                  Open any text editor (e.g Visual Studio Code, Sublime).
+                  You can get a template or extract data using firebase-CLI
                 </li>
                 <li class="my-2">
-                  Make sure that the JSON file you have has this template.
-                </li>
-                <img src="../../../assets/json.PNG" class="my-2" />
-                <li class="my-2">
-                  Open terminal and type "auth:import (file name)".
+                  Open terminal Make sure you are logged in using command: <b>firebase login</b>
                 </li>
                 <li class="my-2">
-                  Add the paramaters needed in the JSON file.
+                 Type the command: <b>firebase auth:export users.json --format=JSON</b>
                 </li>
-                <li class="my-2">Press enter.</li>
+                <!--<img src="../../../assets/json.PNG" class="my-2" />-->
+                <li class="my-2">
+                  Import the exported data using the import button
+                </li>
+                  <li class="my-2">
+                  You can also use this template provided:
+                </li>
+                <img src="../../../assets/template.png" class="my-2" />
               </ol>
             </div>
           </div>
+          <input type="file"  accept="application/json,.json" (change)="handleFileOnChange($event)" style="display: none;" #file id="file" />
           <div class="modal-buttons">
-            <button type="button" class="cancelBtn" (click)="triggerImportUserManual()">
-              Okay, I got it!
+            <button type="button" class="addBtn" (click)="importJSON()" >
+              Import JSON
+            </button>
+              <button type="button" class="cancelBtn" (click)="triggerImportUserManual()">
+             Cancel
             </button>
           </div>
         </div>

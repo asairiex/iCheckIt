@@ -10,6 +10,7 @@ import { Router } from '@angular/router';
 
 import 'firebase/storage';
 
+
 // import * as firestore from '@google-cloud/firestore';
 @Injectable({
   providedIn: 'root',
@@ -52,7 +53,6 @@ export class TaskService {
         })
       );
   }
-
 
   public getTaskRecipients(): Observable<any> {
     return this.afs
@@ -116,6 +116,47 @@ export class TaskService {
       );
   }
 
+  public getAccomplishedTasks(id: string): Observable<any> {
+    console.log('ID', id);
+    // return this.afs.collection('tasks',ref => ref.where('taskId','==',id))
+    // .snapshotChanges()
+    // .pipe(
+    //   map((doc: any) => {
+    //     // console.log(doc)
+    //     return doc.map(
+    //       (c: { payload: { doc: { data: () => any; id: any; }; }; }) => {
+    //         const data = c.payload.doc.data();
+    //         const id = c.payload.doc.id;
+    //         return { id, ...data };
+    //       }z
+    //     )})
+    // );
+
+    
+    return this.afs
+      .collection('accomplished_tasks')
+      .snapshotChanges()
+      .pipe(map(a => a.map(a => {
+        const item = a.payload.doc.data()
+        //@ts-ignore
+        if (item.taskId === id) {
+          return a.payload.doc.data();
+        }
+      })))
+     
+      /*
+    return this.afs
+      .collection('accomplished_tasks')
+      .snapshotChanges()
+      .pipe(
+        map((doc: any) => {
+          console.log("DOC", doc.payload)
+          return { id: doc.payload.id, ...doc.payload.data() };
+        })
+      );
+      */
+  }
+
   public addTask(
     title: string,
     description: string,
@@ -123,13 +164,13 @@ export class TaskService {
     startsAt: Date,
     deadline: Date,
     uploadedBy: string,
-    recipients: Array<any>,
+    recipients: any,
     pushTokens: any,
     term: string
   ): Promise<any> {
     let taskId = this.afs.createId();
 
-    recipients.forEach((recipient) => {
+    recipients.forEach((recipient: any) => {
       recipient.title = title;
       recipient.taskId = taskId;
       recipient.description = description;
@@ -166,10 +207,38 @@ export class TaskService {
       .doc(taskId)
       .set(task)
       .then(() => {
-        this.toastService.publish(
-          'Task has been succesfully created!',
-          'formSuccess'
-        );
+        const headers = new HttpHeaders({
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        });
+        const params: URLSearchParams = new URLSearchParams();
+
+        params.set('recipients', recipients);
+        params.set('title', title);
+        params.set('deadline', deadline.toUTCString());
+        params.set('description', description);
+
+        this.http
+          .post(
+            `https://us-central1-icheckit-6a8bb.cloudfunctions.net/taskCreatedEmail`,
+            {
+              recipients,
+            },
+            {
+              headers,
+            }
+          )
+          .toPromise()
+          .then(() => {
+            this.toastService.publish(
+              'Task has been succesfully created!',
+              'formSuccess'
+            );
+            console.log('emails sent!');
+          })
+          .catch((err) => {
+            console.log(err);
+          });
       })
       .then(() => {
         this.router.navigate(['/task/', taskId]);
