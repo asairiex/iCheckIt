@@ -11,6 +11,7 @@ import { AngularFirestore } from '@angular/fire/firestore';
 import JSZip from 'jszip';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
+import { ToastService } from 'src/app/services/toast.service';
 
 @Component({
   selector: 'app-task',
@@ -63,7 +64,8 @@ export class TaskComponent implements OnInit {
     readonly fire: AngularFireAuth,
     private taskService: TaskService,
     private fb: FormBuilder,
-    private storage: AngularFireStorage
+    private storage: AngularFireStorage,
+    public toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -211,7 +213,7 @@ export class TaskComponent implements OnInit {
 */
     const zip = new JSZip();
 
-    if (this.submissionUrls) {
+    if (this.submissionUrls && this.submissionUrls.length > 0) {
       if (this.submissionUrls[0]?.displayName) {
         const files = this.submissionUrls.map((student: any) => {
           const studentFolder = zip.folder(
@@ -250,6 +252,8 @@ export class TaskComponent implements OnInit {
           });
         });
       }
+    } else {
+      this.toastService.publish('No submissions detected', 'formError');
     }
   };
 
@@ -262,9 +266,21 @@ export class TaskComponent implements OnInit {
     return axios.get(url, { responseType: 'blob' }).then((resp) => {
       console.log('RESP', resp);
       console.log('RESPONSE from download', resp.data);
-      studentFolder.file(filename, resp.data);
+      studentFolder.file(this.calculateFileName(url), resp.data);
     });
   };
+
+  public calculateFileName(url: string) {
+    const string = url.replace(
+      'https://firebasestorage.googleapis.com/v0/b/icheckit-6a8bb.appspot.com/o/studentuploads',
+      ''
+    );
+    const string2 = String(string).replace(/%2F/g, '');
+    //console.log(string2);
+    const string3 = string2.substring(48);
+    console.log('FILENAME', string3.split('?')[0]);
+    return string3.split('?')[0];
+  }
 
   public triggerAddTaskModal(recipient?: any) {
     if (recipient == null) {
