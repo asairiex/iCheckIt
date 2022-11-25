@@ -170,6 +170,7 @@ export class UserComponent implements OnInit {
       this.userData = user;
       this.auth.getUserData(user?.uid).subscribe((res) => {
         this.fsData = res;
+        console.log('FSDATA', res);
       });
     });
 
@@ -239,6 +240,8 @@ export class UserComponent implements OnInit {
       section: ['', Validators.required],
       yearGraduated: ['', Validators.required],
     });
+
+   
   }
 
   public triggerDeleteModal() {

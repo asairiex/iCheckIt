@@ -5,22 +5,26 @@ import { AuthService } from 'src/app/services/auth.service';
 import { TaskService } from 'src/app/services/task.service';
 import { switchMap } from 'rxjs/operators';
 import { FormBuilder, Validators } from '@angular/forms';
+import { map } from 'rxjs/operators';
 import { AngularFireStorage } from '@angular/fire/storage';
-
+import { UserService } from 'src/app/services/user.service';
+import { forkJoin, Observable } from 'rxjs';
 @Component({
   selector: 'app-verify-task',
   templateUrl: './verify-task.component.html',
-  styleUrls: ['./verify-task.component.css']
+  styleUrls: ['./verify-task.component.css'],
 })
 export class VerifyTaskComponent implements OnInit {
   studentList: any;
   dateToday = new Date();
-  userData:any;
+  userData: any;
   fsData: any;
   taskData: any;
   studentTaskList: any;
   p: number = 1;
   term!: string;
+  regForms$: any;
+  finalReg$: any;
 
   constructor(
     public auth: AuthService,
@@ -28,56 +32,84 @@ export class VerifyTaskComponent implements OnInit {
     readonly fire: AngularFireAuth,
     private taskService: TaskService,
     private fb: FormBuilder,
-    private storage: AngularFireStorage
-  ) { }
+    private storage: AngularFireStorage,
+    public userService: UserService
+  ) {}
 
   ngOnInit(): void {
     var d = new Date();
-    var y = d.getFullYear()
+    var y = d.getFullYear();
     var n = d.getMonth();
-    console.log(n)
-    console.log(y)
+    console.log(n);
+    console.log(y);
     if (n >= 1 && n <= 6) {
       console.log('January to June');
-      console.log('2nd Term SY ' + y + '-' + (y + 1))
-    }
-    else if (n >= 8 && n <= 12) {
+      console.log('2nd Term SY ' + y + '-' + (y + 1));
+    } else if (n >= 8 && n <= 12) {
       console.log('August to December');
-      console.log('1st Term SY ' + y + '-' + (y + 1))
+      console.log('1st Term SY ' + y + '-' + (y + 1));
+    } else {
+      console.log('Summer Term' + y + '-' + (y + 1));
     }
-    else {
-      console.log('Summer Term' + y + '-' + (y + 1))
-    }
-    this.fire.user.subscribe((user:any) => {
+    this.fire.user.subscribe((user: any) => {
       this.userData = user;
-      this.auth.getUserData(user?.uid).subscribe(res => {
+      this.auth.getUserData(user?.uid).subscribe((res) => {
         this.fsData = res;
-      })
-    })
+      });
+    });
 
     this.taskService.getVerificationTask().subscribe((res) => {
       this.taskData = res;
-    })
+    });
+
+    this.userService.getRegistrationForms().subscribe((res) => {
+      console.log(res, 'RES');
+      this.regForms$ = res;
+
+      /*
+      console.log(
+        forkJoin(
+          res.map((r: any) => {
+            if (r.studentId) {
+              this.userService
+                .getStudent(r?.studentId)
+                .pipe(map((student: any) => ({ ...r, student })));
+            }
+          })
+        )
+      );
+      */
+    });
   }
 
-  public verifyStudent(data:any) {
-    let course = data.proposedSection.slice(1,3);
+  public verifyStudent(data: any) {
+    /*
+    let course = data.proposedSection.slice(1, 3);
     if (course == 'IT') {
-      this.taskService.verifyStudent(data.uid,data,'BS Information Technology');
-    }
-    else if (course == 'IS') {
-      this.taskService.verifyStudent(data.uid,data,'BS Information Systems');
-    }
-    else if (course == 'CS') {
-      this.taskService.verifyStudent(data.uid,data,'BS Computer Science');
+      this.taskService.verifyStudent(
+        data.uid,
+        data,
+        'BS Information Technology'
+      );
+    } else if (course == 'IS') {
+      this.taskService.verifyStudent(data.uid, data, 'BS Information Systems');
+    } else if (course == 'CS') {
+      this.taskService.verifyStudent(data.uid, data, 'BS Computer Science');
     } else {
-      console.log('may error')
+      console.log('may error');
     }
-
+    */
+    this.taskService.verifyStudentByRegForm(
+      data?.studentId,
+      this.fsData.displayName,
+      data?.uid
+    );
   }
 
-  public deleteSubmission(data:any) {
-    this.taskService.deleteStudentVerification(data.uid,data);
+  public deleteSubmission(data: any) {
+    /*
+    this.taskService.deleteStudentVerification(data.uid, data);
+    */
+    this.taskService.deleteRegform(data?.uid);
   }
-
 }

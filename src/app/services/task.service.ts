@@ -132,19 +132,22 @@ export class TaskService {
     //     )})
     // );
 
-    
     return this.afs
       .collection('accomplished_tasks')
       .snapshotChanges()
-      .pipe(map(a => a.map(a => {
-        const item = a.payload.doc.data()
-        //@ts-ignore
-        if (item.taskId === id) {
-          return a.payload.doc.data();
-        }
-      })))
-     
-      /*
+      .pipe(
+        map((a) =>
+          a.map((a) => {
+            const item = a.payload.doc.data();
+            //@ts-ignore
+            if (item.taskId === id) {
+              return a.payload.doc.data();
+            }
+          })
+        )
+      );
+
+    /*
     return this.afs
       .collection('accomplished_tasks')
       .snapshotChanges()
@@ -985,6 +988,66 @@ export class TaskService {
             recipients: firebase.firestore.FieldValue.arrayRemove(data),
           });
       });
+  }
+
+  public verifyStudentByRegForm(id: string, user: any, regId: string) {
+
+    this.afs
+      .collection('registration_forms')
+      .doc(regId)
+      .set(
+        {
+          acceptedAt: new Date(),
+          acceptedBy: user,
+          isAccepted: true,
+        },
+        { merge: true }
+      )
+      .then((res) => {
+        this.afs
+          .collection('users')
+          .doc(id)
+          .set(
+            {
+              isVerified: true,
+              verifiedBy: user,
+              verifiedAt: new Date(),
+            },
+            { merge: true }
+          )
+          .then(() =>
+            this.toastService.publish(
+              'Student Successfully verified',
+              'formSuccess'
+            )
+          )
+          .catch((err) => {
+            console.log(err);
+
+            this.afs.collection('registration_forms').doc().set({
+              acceptedAt: '',
+              acceptedBy: '',
+              isAccepted: false,
+            });
+
+            this.toastService.publish('Failed to verify student', 'formError');
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+        this.toastService.publish(
+          'Failed to verify registration form',
+          'formError'
+        );
+      });
+    
+  }
+
+  public deleteRegform(id: string) {
+     return this.afs
+       .collection('registration_forms')
+       .doc(id)
+       .delete()
   }
 
   public deleteStudentVerification(id: string, data: any) {

@@ -35,8 +35,8 @@
         </div>
         <div class="profile-container-left-main">
           <div class="profile-details">
-            <h1 class="details-title">Status: <span class="status-verified" *ngIf="user.verified == 'Enrolled'"> Verified</span>
-              <span class="status-not-verified" *ngIf="user.verified == 'Not Verified'"> Not Verified</span></h1>
+            <h1 class="details-title">Status: <span class="status-verified" *ngIf="user.isVerified == true"> Verified</span>
+              <span class="status-not-verified" *ngIf="user.isVerified == false || user.isVerified == null"> Not Verified</span></h1>
             <p><span class="details-title">Full Name:</span> {{user.displayName}}</p>
             <p><span class="details-title">Email:</span> {{user.email}}</p>
             <p><span class="details-title">Contact Number:</span> {{user.contactNumber}}</p>
@@ -63,6 +63,9 @@
         </div>
         <div class="user-actions">
           <!-- Layout for Edit student beginning -->
+          <!--
+
+        
           <div class="actions-edit" (click)="triggerEditUserModal()" *ngIf="user.role == 'Student'">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -70,6 +73,7 @@
             </svg>
             <p>Edit User Profile</p>
           </div>
+            -->
 
             <div class="actions-edit" (click)="triggerArchiveUserModal()" *ngIf="user.role == 'Student'">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20">
@@ -83,6 +87,7 @@
           <!-- Layout for Edit student End -->
 
           <!-- Layout for Edit Admin beginning -->
+          <!--
           <div class="actions-edit" (click)="triggerEditAdminModal()" *ngIf="user.role == 'Department Head'">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
@@ -90,9 +95,19 @@
             </svg>
             <p>Edit Admin Profile</p>
           </div>
+          -->
           <!-- Layout for Edit Admin beginning End -->
 
           <div class="actions-delete" (click)="triggerDeleteModal()" *ngIf="user.role == 'Student'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <p>Delete User</p>
+          </div>
+
+           <div class="actions-delete" (click)="triggerDeleteModal()" *ngIf="fsData.role == 'CICS Office Staff' && user.role == 'Department Head'">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

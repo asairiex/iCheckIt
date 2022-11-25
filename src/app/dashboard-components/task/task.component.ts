@@ -8,10 +8,11 @@ import { switchMap } from 'rxjs/operators';
 import { FormBuilder, Validators } from '@angular/forms';
 import { AngularFireStorage } from '@angular/fire/storage';
 import { AngularFirestore } from '@angular/fire/firestore';
-import JSZip from 'jszip';
+import JSZip, { file } from 'jszip';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
 import { ToastService } from 'src/app/services/toast.service';
+import fileDownload from 'js-file-download';
 
 @Component({
   selector: 'app-task',
@@ -55,6 +56,7 @@ export class TaskComponent implements OnInit {
   term!: string;
   closeSubmission!: boolean;
   submissionUrls: any;
+  finalTasks$: any;
 
   constructor(
     private afs: AngularFirestore,
@@ -161,6 +163,7 @@ export class TaskComponent implements OnInit {
         })
       )
       .subscribe((res) => {
+        console.log(res);
         this.submissionUrls = res
           .filter((a: any) => a !== undefined)
           .map((url: any) => {
@@ -178,6 +181,21 @@ export class TaskComponent implements OnInit {
     });
   }
 
+  public downloadOne(url: any) {
+    console.log(url);
+    axios
+      .get(url, {
+        responseType: 'blob',
+      })
+      .then((res) => {
+        console.log(res);
+        fileDownload(res?.data, this.calculateFileName(url));
+      })
+      .catch((err) => {
+        console.log(err);
+        this.toastService.publish('Failed to download submission', 'formError');
+      });
+  }
   public bulkDownloadSubmission = () => {
     console.log('DOWNLOADING...');
     const title = this.taskData.title + ' Submissions';
@@ -350,7 +368,8 @@ export class TaskComponent implements OnInit {
         pushToken: element.pushToken,
         section: element.section,
         status: 'Accomplished',
-        submissionLink: element.submissionLink,
+        submissionLink: element?.attachmentPaths,
+        attachmentPaths: element?.attachmentPaths,
         taskId: element.taskId,
         title: element.title,
         uid: element.uid,
@@ -450,7 +469,8 @@ export class TaskComponent implements OnInit {
       section: recipient.section,
       pushToken: recipient.pushToken,
       status: 'Accomplished',
-      submissionLink: recipient.submissionLink,
+      submissionLink: recipient.attachmentPaths,
+      attachmentPaths: recipient.attachmentPaths,
       submittedAt: recipient.submittedAt,
       taskId: recipient.taskId,
       title: recipient.title,

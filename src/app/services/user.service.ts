@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/firestore';
 import { AngularFireFunctions } from '@angular/fire/functions';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AngularFireAuth  } from '@angular/fire/auth';
+import { AngularFireAuth } from '@angular/fire/auth';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ToastService } from './toast.service';
+import db from 'firebase.config';
 
 // import { countReset } from 'console';
 
@@ -66,6 +67,21 @@ export class UserService {
     return this.afs.collection('users').doc(id).valueChanges();
   }
 
+  public getStudent2(id: string): Observable<any> {
+    // return this.afs.collection('users')
+    // .doc(id)
+    // .snapshotChanges()
+    // .pipe(
+    //   map((doc: any) => {
+    //     // console.log(doc)
+    //     return { id: doc.payload.id, ...doc.payload.data() };
+    //   })
+    // );
+    return this.afs
+      .collection('users', (ref) => ref.where('uid', '==', id))
+      .snapshotChanges();
+  }
+
   public getStudentUsers(): Observable<any> {
     return this.afs
       .collection('users', (ref) =>
@@ -80,6 +96,32 @@ export class UserService {
               const data = c.payload.doc.data();
               const id = c.payload.doc.id;
               return { id, ...data };
+            }
+          );
+        })
+      );
+  }
+
+  public getRegistrationForms(): Observable<any> {
+    return this.afs
+      .collection('registration_forms', (ref) =>
+        ref.where('isAccepted', '==', false)
+      )
+      .snapshotChanges()
+      .pipe(
+        map((doc: any) => {
+          // console.log(doc)
+          return doc.map(
+            (c: { payload: { doc: { data: () => any; id: any } } }) => {
+              const data = c.payload.doc.data();
+              const id = c.payload.doc.id;
+
+              const finalData = {
+                uid: id,
+                ...data,
+              };
+
+              return finalData;
             }
           );
         })
@@ -165,6 +207,7 @@ export class UserService {
             email: email,
             section: section,
             verified: 'Enrolled',
+            isVerified: true,
             pushToken: '',
             course: course,
             displayName: displayName,
@@ -191,6 +234,78 @@ export class UserService {
         .catch((err) => {
           this.toastService.publish(
             'The student account creation was not successful. The user email might have been already existing in our database,',
+            'userDoesNotExist'
+          );
+        })
+    );
+  }
+
+  adminImportUsers(users: any): Promise<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    });
+    const params: URLSearchParams = new URLSearchParams();
+    params.set('users', users);
+
+    return (
+      this.http
+        .post(
+          `https://us-central1-icheckit-6a8bb.cloudfunctions.net/importUsers`,
+          {
+            users: users,
+          },
+          {
+            headers,
+          }
+        )
+        .toPromise()
+        .then((cred: any) => {
+          console.log(cred);
+
+          try {
+            let promises = cred?.res.map((student: any, idx: number) => {
+              console.log(student);
+
+              const data = {
+                uid: student?.uid,
+                contactNumber: users[idx].contactNumber,
+                email: users[idx]?.email,
+                section: users[idx]?.section,
+                verified: 'Enrolled',
+                isVerified: true,
+                pushToken: '',
+                course: users[idx]?.course,
+                displayName: users[idx]?.displayName,
+                createdAt: Date.now(),
+                role: 'Student',
+              };
+              return this.afs.collection('users').doc(student?.uid).set(data);
+            });
+
+            if (promises) {
+              Promise.all(promises).then((res) => {
+                console.log(res);
+                this.toastService.publish(
+                  'Successfully imported users',
+                  'formSuccess'
+                );
+              });
+            } else {
+              console.log('Promises not ofund');
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        })
+
+        // .catch(() => {
+        //   this.toastService.publish('The student account creation was not successful. The user email might have been already existing in our database,','userDoesNotExist');
+        // });
+        .catch((err) => {
+          console.log(err);
+          this.toastService.publish(
+            'The import was not successful. There might be a user email might have been already existing in our database,',
             'userDoesNotExist'
           );
         })
@@ -306,32 +421,29 @@ export class UserService {
   archiveUserAccount(
     id: string,
     email: string,
-    yearGraduated: number,
+    yearGraduated: number
   ): Promise<any> {
-    
-      return this.afs
-        .collection('users')
-        .doc(id)
-        .update({
-          role: 'Archived',
-          yearGraduated: yearGraduated,
-        })
-        .then(() => {
-          this.toastService.publish(
-            'User account with the email ' +
-              email +
-              ' has been successfully archived',
-            'formSuccess'
-          );
-        })
-        .catch(() => {
-          this.toastService.publish(
-            'There has been an issue with the archiving of the account: ' +
-              email,
-            'userDoesNotExist'
-          );
-        });
-    
+    return this.afs
+      .collection('users')
+      .doc(id)
+      .update({
+        role: 'Archived',
+        yearGraduated: yearGraduated,
+      })
+      .then(() => {
+        this.toastService.publish(
+          'User account with the email ' +
+            email +
+            ' has been successfully archived',
+          'formSuccess'
+        );
+      })
+      .catch(() => {
+        this.toastService.publish(
+          'There has been an issue with the archiving of the account: ' + email,
+          'userDoesNotExist'
+        );
+      });
   }
 
   updateUserAccount(
